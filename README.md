@@ -1,6 +1,9 @@
 # GitHub Card Generator
 
 > **Note:** There is a live demo currently available, but it is hosted on a personal cloud account and may be taken down in the future to conserve resources. If the live link is down, you can easily run this project locally on your own machine!
+> 
+> 🔗 **Live Frontend UI:** [https://github-card-frontend-482737836628.us-central1.run.app](https://github-card-frontend-482737836628.us-central1.run.app)  
+> 🔗 **Live Backend API:** [https://github-card-backend-482737836628.us-central1.run.app](https://github-card-backend-482737836628.us-central1.run.app)
 
 A full-stack application that generates personalized GitHub stat cards using AI. It consists of a FastAPI backend and a static HTML/JS frontend, fully containerized and ready for deployment on Google Cloud Run.
 
