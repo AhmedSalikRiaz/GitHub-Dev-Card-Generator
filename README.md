@@ -1,4 +1,4 @@
-# GitHub Card Generator
+# GitHub Card Generator: Building Personalized Agent With ADK and MCP
 
 > **Note:** There is a live demo currently available, but it is hosted on a personal cloud account and may be taken down in the future to conserve resources. If the live link is down, you can easily run this project locally on your own machine!
 > 
