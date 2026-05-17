@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Dev Card Generator</title>
+    <!-- React & Babel for zero-build setup -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #0d1117;
+        color: #c9d1d9;
+      }
+      .github-input {
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .github-input:focus {
+        border-color: #58a6ff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.3);
+      }
+      .generate-btn {
+        background-color: #238636;
+        transition:
+          transform 0.1s,
+          background-color 0.2s;
+      }
+      .generate-btn:hover {
+        background-color: #2ea043;
+        transform: translateY(-1px);
+      }
+      .generate-btn:active {
+        transform: translateY(0);
+      }
+      .fade-in {
+        animation: fadeIn 0.8s ease-out forwards;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          #161b22 25%,
+          #21262d 50%,
+          #161b22 75%
+        );
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+      }
+      @keyframes loading {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center min-h-screen p-4">
+    <div id="root" class="w-full max-w-[600px]"></div>
+
+    <script type="text/babel">
+      const { useState } = React
+
+      function App() {
+        const [username, setUsername] = useState("")
+        const [loading, setLoading] = useState(false)
+        const [cardUrl, setCardUrl] = useState("")
+        const [error, setError] = useState("")
+        const [copied, setCopied] = useState(false)
+
+        // API base URL for backend requests.
+        // Locally: hardcoded to dev server. In Docker: envsubst replaces ${BACKEND_URL} at container startup.
+        const API_BASE =
+          window.location.hostname === "localhost"
+            ? "http://127.0.0.1:8080"
+            : "${BACKEND_URL}"
+
+        const handleGenerate = async () => {
+          if (!username) return
+          setLoading(true)
+          setError("")
+          setCardUrl("")
+          setCopied(false)
+
+          try {
+            const response = await fetch(`${API_BASE}/generate`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username }),
+            })
+
+            if (!response.ok)
+              throw new Error("Could not find that GitHub profile.")
+
+            const data = await response.json()
+            setCardUrl(`${API_BASE}${data.card_url}`)
+          } catch (err) {
+            setError(err.message)
+          } finally {
+            setLoading(false)
+          }
+        }
+
+        const copyToClipboard = () => {
+          navigator.clipboard.writeText(cardUrl)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
+        }
+
+        return (
+          <div className="text-center">
+            <h1 className="text-4xl font-extrabold text-white mb-2">
+              GitHub Dev Card Generator
+            </h1>
+            <p class="text-gray-400 mb-8">
+              Enter any public GitHub username to generate your dev vibe.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-10">
+              <input
+                type="text"
+                placeholder="e.g. torvalds"
+                className="github-input flex-1 p-3 rounded-md text-white font-semibold"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleGenerate()}
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                className="generate-btn px-6 py-3 rounded-md text-white font-bold shadow-lg disabled:opacity-50"
+              >
+                {loading ? "Generating..." : "Generate Card"}
+              </button>
+            </div>
+
+            {error && (
+              <div className="bg-red-900/30 border border-red-500/50 text-red-200 p-4 rounded-md mb-6 fade-in">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {loading && (
+              <div className="space-y-4">
+                <div className="skeleton h-64 w-full rounded-2xl"></div>
+                <p className="text-sm text-gray-500 animate-pulse text-center">
+                  Gemini is analyzing the codebase...
+                </p>
+              </div>
+            )}
+
+            {cardUrl && !loading && (
+              <div className="fade-in space-y-6">
+                <div className="bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden shadow-2xl">
+                  <iframe
+                    src={cardUrl}
+                    className="w-full h-[500px] border-none"
+                    title="Generated Card"
+                  />
+                </div>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={copyToClipboard}
+                    className="bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] px-5 py-2 rounded-md font-semibold text-sm flex items-center gap-2 transition-colors"
+                  >
+                    {copied ? "✅ Copied!" : "🔗 Copy Card URL"}
+                  </button>
+                  <a
+                    href={cardUrl}
+                    target="_blank"
+                    className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-md font-semibold text-sm transition-colors"
+                  >
+                    View Full Page
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"))
+      root.render(<App />)
+    </script>
+  </body>
+</html>
